@@ -11,9 +11,15 @@
     "symfony/dependency-injection": "^7"
   },
   "require-dev": {
-    "roave/security-advisories": "dev-latest"
+    "roave/security-advisories": "dev-latest",
+    "laravel/pint": "^1.17"
   },
   "license": "MIT",
+  "scripts": {
+    "cs": [
+      "./vendor/bin/pint src"
+    ]
+  },
   "autoload": {
     "psr-4": {
       "App\\": "src"
