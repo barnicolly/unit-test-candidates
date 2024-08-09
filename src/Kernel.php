@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
-final class AppKernel extends Kernel
+final class Kernel extends BaseKernel
 {
     public function registerBundles(): array
     {
@@ -19,7 +21,7 @@ final class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader): void
     {
-        $loader->load(__DIR__.'/../config/services.yml');
+        $loader->load(__DIR__ . '/../config/services.yml');
     }
 
     protected function build(ContainerBuilder $container): void
@@ -29,14 +31,14 @@ final class AppKernel extends Kernel
 
     private function createCollectingCompilerPass(): CompilerPassInterface
     {
-        return new class implements CompilerPassInterface
+        return new class() implements CompilerPassInterface
         {
             public function process(ContainerBuilder $container): void
             {
                 $applicationDefinition = $container->findDefinition(Application::class);
 
                 foreach ($container->getDefinitions() as $definition) {
-                    if (! is_a($definition->getClass(), Command::class, true)) {
+                    if (!is_a($definition->getClass(), Command::class, true)) {
                         continue;
                     }
 

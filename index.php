@@ -1,12 +1,14 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__.'/vendor/autoload.php';
+declare(strict_types=1);
 
-use App\AppKernel;
+require_once __DIR__ . '/vendor/autoload.php';
+
+use App\Kernel;
 use Symfony\Component\Console\Application;
 
-$kernel = new AppKernel('dev', true);
+$kernel = new Kernel('dev', true);
 $kernel->boot();
 
 $container = $kernel->getContainer();
