@@ -12,12 +12,14 @@
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
-    "laravel/pint": "^1.17"
+    "laravel/pint": "^1.17",
+    "phpstan/phpstan": "^1.11"
   },
   "license": "MIT",
   "scripts": {
     "cs": [
-      "./vendor/bin/pint src"
+      "./vendor/bin/pint src",
+      "./vendor/bin/phpstan analyze"
     ]
   },
   "autoload": {
