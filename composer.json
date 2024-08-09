@@ -14,18 +14,28 @@
   "require-dev": {
     "roave/security-advisories": "dev-latest",
     "laravel/pint": "^1.17",
-    "phpstan/phpstan": "^1.11"
+    "phpstan/phpstan": "^1.11",
+    "phpunit/phpunit": "^11.3",
+    "spatie/phpunit-snapshot-assertions": "^5.1"
   },
   "license": "MIT",
   "scripts": {
     "cs": [
-      "./vendor/bin/pint src",
+      "./vendor/bin/pint src tests",
       "./vendor/bin/phpstan analyze"
+    ],
+    "test": [
+      "./vendor/bin/phpunit"
     ]
   },
   "autoload": {
     "psr-4": {
       "App\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
     }
   },
   "minimum-stability": "stable"

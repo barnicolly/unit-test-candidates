@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Chat;
+
+use App\Containers\Chat\Dto\SnippetDto;
+use App\Containers\Chat\Enums\AiModelEnum;
+use App\Containers\Chat\Enums\ChatModeEnum;
+use App\Containers\Chat\Enums\SnippetTypeEnum;
+use App\Containers\Chat\Models\Dialog;
+use App\Containers\Chat\Tasks\GenerateSnippets;
+use App\Containers\Limit\Traits\CheckAccessAndLimits;
+use App\Exceptions\EmailMustBeVerified;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\Framework\AdminRouteService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+
+class ChatController extends Controller
+{
+    use CheckAccessAndLimits;
+
+    public function modes(Request $request, ChatModeEnum $chatModeEnum): Response
+    {
+        $dialogHash = $request->get('c');
+        $dialog = null;
+        if ($dialogHash) {
+            $dialog = Dialog::query()
+                ->where('connection_hash', $dialogHash)
+                ->with(
+                    [
+                        'requests',
+                        'requests.stat',
+                        'requests.files',
+                        'requests.attachments',
+                        'requests.recognizedImages',
+                        'requests.job',
+                    ]
+                )
+                ->withTrashed()
+                ->first();
+
+            if ($dialog && $dialog->deleted_at) {
+                return abort(Response::HTTP_NOT_FOUND);
+            }
+        }
+
+        try {
+            /** @var User $user */
+            $user = auth()->user();
+            $this->checkLeftRequests($request->ip(), $user);
+
+            if ($user->email && !$user->email_verified_at) {
+                throw new EmailMustBeVerified();
+            }
+        } catch (EmailMustBeVerified $e) {
+            $error = $e;
+        }
+
+        config()->set('platform.workspace', 'platform::workspace.full');
+
+        $viewName = $this->getViewName($chatModeEnum);
+
+        $viewData = [
+            'loadFiles' => ChatModeEnum::GENERATE_IMAGE !== $chatModeEnum,
+            'modes' => $this->getModes(),
+            'models' => $this->getModels($chatModeEnum),
+            'modelGroups' => AiModelEnum::groups(),
+            'selectedModel' => $dialog?->model,
+            'error' => $error ?? null,
+            'chatMode' => $chatModeEnum,
+            'snippets' => $this->getModeSnippets(dialog: $dialog, chatMode: $chatModeEnum),
+            'dialog' => $dialog,
+            'description' => null !== $dialog ? Str::ucfirst(Str::limit($dialog->title, 50)) : 'Задайте ваш вопрос в чат',
+            'newDialogLink' => app(AdminRouteService::class)->getAiMode($chatModeEnum),
+            'title' => ChatModeEnum::ru($chatModeEnum),
+            'isLk' => true,
+        ];
+        return response()->view($viewName, $viewData);
+    }
+
+    public function getViewName(ChatModeEnum $mode): string
+    {
+        return match ($mode) {
+            ChatModeEnum::ONLINE => 'pages-lk::chat.modes.online',
+            ChatModeEnum::GENERATE_IMAGE => 'pages-lk::chat.modes.image',
+            default => 'pages-lk::chat.modes.text',
+        };
+    }
+
+    private function getModes(): array
+    {
+        $modes = ChatModeEnum::public();
+        $result = [];
+        foreach ($modes as $mode) {
+            $result[] = [
+                'mode' => $mode,
+                'url' => app(AdminRouteService::class)->getAiMode($mode),
+            ];
+        }
+        return $result;
+    }
+}

@@ -14,3 +14,9 @@ go: up ps php
 
 down:
 	docker-compose down
+
+cs:
+	docker-compose exec php sh -c "composer cs"
+
+test:
+	docker-compose exec php sh -c "composer test"
