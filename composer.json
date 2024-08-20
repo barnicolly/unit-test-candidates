@@ -1,6 +1,6 @@
 {
-  "name": "barnicolly/rector-custom-rules",
-  "description": "These are three rector rules.",
+  "name": "barnicolly/find-candidates",
+  "description": "Find candidates for unit testing",
   "require": {
     "php": "^8.0",
     "nikic/php-parser": "^5.1",
